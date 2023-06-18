@@ -80,7 +80,9 @@ More tests are under development
 
 ## Additional Notes
 
-- The provided CSV files (`athletes_summer.csv`, `athletes_winter.csv`, `noc_regions.csv`) should be placed in the project root directory.
+- The provided CSV files (`athletes_summer.csv`, `athletes_winter.csv`, `noc_regions.csv`) should be placed in the data directory.
+- They have been stripped of the first column since it was not a unique primary key
+- They will be autoloaded by a custom dataloader into the container on the first run and then stored in persistent storage of the container.
 - Feel free to modify and extend the project to suit your specific needs.
 
 For any issues or questions, please raise an Issue or contact [kevin.george@tum.de](mailto:kevin.george@tum.de).
