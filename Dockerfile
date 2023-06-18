@@ -18,8 +18,10 @@ WORKDIR /app
 
 # Install dependencies
 COPY poetry.lock pyproject.toml ./
+RUN poetry check
 RUN poetry install --no-root
 
 # Run your app
 COPY . /app
+EXPOSE 8000
 CMD [ "poetry", "run", "uvicorn", "athlete_api.main:app" ]

@@ -11,8 +11,8 @@ services:
     ports:
       - 8000:8000
     environment:
-      - FILE_NAME= './database.ini'
-      - SECTION_NAME= 'postgresql'
+      - FILE_NAME=./athlete_api/database.ini
+      - SECTION_NAME=postgresql
     depends_on:
       - db
   db:

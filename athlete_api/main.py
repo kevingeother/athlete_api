@@ -11,9 +11,9 @@ from .models import (AthleteBase, AthleteSummer, AthleteUpdate, AthleteWinter,
 from .services import connect
 from .utils import add_where, verify_params
 
-database_url = "postgresql://postgres:123@db:5432/athletes"
-engine = create_engine(database_url)
-# engine = connect(filename=os.getenv('FILE_NAME'), section=os.getenv('SECTION_NAME'), echo=True)
+# database_url = "postgresql://postgres:123@db:5432/athletes"
+# engine = create_engine(database_url)
+engine = connect(filename=os.getenv('FILE_NAME'), section=os.getenv('SECTION_NAME'), echo=True)
 
 #debug
 table_names = inspect(engine)
@@ -23,13 +23,13 @@ print(table_names.get_table_names())
 app = FastAPI()
 
 # We define authorizations for middleware components
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # today = datetime.date.today()
 # year = today.year
