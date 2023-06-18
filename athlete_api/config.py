@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import os
 
 def config(filename:str, section:str):
+    print(filename)
     # create a parser
     if os.path.isfile(filename):
         parser = ConfigParser()

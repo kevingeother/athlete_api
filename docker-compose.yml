@@ -5,9 +5,12 @@ version: '3.10'
 services:
   web:
     build: .
+      # context: .
+      # dockerfile: Dockerfile
     command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; poetry run uvicorn athlete_api.main:app --host 0.0.0.0'
     volumes:
       - .:/app
+      - ./athlete_api/data_loader.py:/app/athlete_api/data_loader.py
     ports:
       - 8000:8000
     environment:
@@ -19,6 +22,9 @@ services:
     image: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./data/regions_clean.csv:/var/lib/postgresql/csv_data/regions_clean.csv
+      - ./data/Athletes_summer_games_clean.csv:/var/lib/postgresql/csv_data/Athletes_summer_games_clean.csv
+      - ./data/Athletes_winter_games_clean.csv:/var/lib/postgresql/csv_data/Athletes_winter_games_clean.csv
     ports:
       - 5432:5432
     expose:
