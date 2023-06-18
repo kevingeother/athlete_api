@@ -66,15 +66,6 @@ Before running the Athlete API, ensure you have the following prerequisites:
 
 The API documentation is automatically generated and available at http://localhost:8000/docs or http://localhost:8000/redoc when the application is running. It provides detailed information about the available endpoints, request/response formats, and example requests.
 
-## Data Insertion and Updates
-
-To populate the database with the provided athlete data, execute the following command:
-```
-python data_insertion.py
-```
-
-This script reads the athlete data from the provided CSV files and inserts it into the PostgreSQL database. It also provides an option to update the data if needed.
-
 ## Running Tests
 
 To run the tests, run the docker web component and pytest.
