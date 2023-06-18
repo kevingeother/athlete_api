@@ -4,8 +4,8 @@ from .config import config
 
 
 #use db folder files for refactoring well: done
-def connect(filename:str ='./database.ini',
-            section:str='postgresql',
+def connect(filename:str,
+            section:str,
             echo:bool = False):
     params = config(filename=filename, section=section)
     DATABASE_URL = (f"postgresql://{params['user']}:{params['password']}"

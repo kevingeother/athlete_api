@@ -78,7 +78,6 @@ def get_country_data(country: str,
     with Session(engine) as session:
         statement_1 = select(AthleteSummer, Region.region, Region.notes)\
                         .where(AthleteSummer.noc == Region.noc)
-                        # .select_from(join(AthleteSummer, Region, AthleteSummer.noc == Region.noc))
         statement_1 = add_where(statement=statement_1,
                                 clauses=[
                                     ('region', country, 'equal' if exact else 'contain'),
@@ -136,7 +135,6 @@ def get_noc_data(noc: str,
                  end_date: int = None,
                  detail: bool = False,
                  season: Seasons = Seasons.UNION):
-    # local = locals()
     try:
         verify = verify_params(noc, sport, start_date, end_date)
         assert verify is True
@@ -193,7 +191,7 @@ def get_noc_data(noc: str,
 # union winter :done
 # add return params? - struct mess
 # add  games, country: done
-# add_medal
+# add_medal : done
 @app.get("/athletes/{athlete_name}", response_model=dict)
 def get_athlete_data(athlete_name: str,
                     #  medal_winner:bool = False, 
