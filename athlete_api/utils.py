@@ -1,0 +1,88 @@
+from typing import List
+
+from sqlmodel import column, func
+from sqlmodel.sql.expression import Select
+
+
+def verify_params(noc: str, sport: str, start_date: int,  end_date: int):
+    #how to make sure this is mandatory in return message/error
+    if not noc:
+        raise ValueError("Path parameter is mandatory")
+    if not sport and not (start_date or end_date):
+        raise ValueError("At least one query parameter is mandatory")
+    if  bool(start_date) ^ bool(end_date):
+        raise ValueError("Both start and end dates needed for period")
+    elif start_date and end_date and start_date > end_date:
+        raise ValueError("Start date should be less than end date")
+    return True
+
+def add_where(statement:Select, clauses:List):
+    for (attr, value, relation) in clauses:
+        print(attr, value, relation)
+        #add assertion
+        # attr:str, value:str|int|float, relation:str = 'equal'):
+
+        if relation!='non_null' and not value:
+            continue
+
+        if isinstance(value, str):
+            if relation=='equal':
+                statement = statement.where(func.lower(column(attr))==value.lower())
+            elif relation=='contain':
+                statement = statement.where(func.lower(column(attr)).contains(value.lower()))
+            elif relation=='non_null':
+                statement = statement.where(func.lower(column(attr)) is not None)
+        elif isinstance(value, (int, float)):
+            if relation=='equal':
+                statement = statement.where(column(attr)==value)
+            elif relation=='unequal':
+                statement = statement.where(column(attr)!=value)
+            elif relation=='non_null':
+                statement = statement.where(column(attr) is not None)
+            elif relation=='gt':
+                statement = statement.where(column(attr)>value)
+            elif relation=='gte':
+                statement = statement.where(column(attr)>=value)
+            elif relation=='lt':
+                statement = statement.where(column(attr)<value)
+            elif relation=='lte':
+                statement = statement.where(column(attr)<=value)
+        elif isinstance(value, bool):
+            if relation=='equal':
+                statement = statement.where(column(attr)==value)
+            elif relation=='unequal':
+                statement = statement.where(column(attr)!=value)
+            elif relation=='non_null':
+                statement = statement.where(column(attr) is not None)
+
+    return statement
+
+#TODO better looks as class
+# class Statement(Select):
+#     def __init__(self) -> None:
+#         super().__init__()
+
+#     def add_where(self, attr:str, value:str|int|float, relation:str = 'equal'):
+#         if not value:
+#             return self
+
+#         if isinstance(value, str):
+#             if relation=='equal':
+#                 self = self.where(func.lower(text(attr)) == value.lower())
+#                 self.
+#             elif relation=='contain':
+#                 self = self.where(func.lower(text(attr)).contains(value.lower()))
+#         elif isinstance(value, (int, float)):
+#             if relation=='equal':
+#                 self = self.where(text(attr)==value)
+#             elif relation=='unequal':
+#                 self = self.where(text(attr)!=value)
+#             elif relation=='gt':
+#                 self = self.where(text(attr)>value)
+#             elif relation=='gte':
+#                 self = self.where(text(attr)>=value)
+#             elif relation=='lt':
+#                 self = self.where(text(attr)<value)
+#             elif relation=='lte':
+#                 self = self.where(text(attr)<=value)
+    
