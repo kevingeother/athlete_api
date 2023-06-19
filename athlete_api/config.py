@@ -1,8 +1,22 @@
-#!/usr/bin/python
+"""
+Config parser function
+"""
 from configparser import ConfigParser
 import os
 
+
 def config(filename:str, section:str):
+    """
+    Read config file and return db object. This function is used to read the config file for database creation
+
+    Args:
+      filename: Name of the config file
+      section: Name of the section to read default to postgresql
+
+    Returns: 
+      Postgresql object with configuration parameters from the config file or empty if not found. 
+    """
+    # Read the config file and return a dictionary of parameters
     print(filename)
     # create a parser
     if os.path.isfile(filename):

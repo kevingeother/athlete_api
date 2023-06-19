@@ -1,4 +1,6 @@
-# import psycopg2
+"""
+Data loader function
+"""
 import os
 from typing import List
 
@@ -11,19 +13,6 @@ os.environ['SECTION_NAME'] = 'postgresql'
 
 # Connect to PostgreSQL
 engine = connect(filename=os.getenv('FILE_NAME'), section=os.getenv('SECTION_NAME'), echo=True)
-
-
-
-# conn = psycopg2.connect(
-#     host="db",
-#     port="5432",
-#     dbname='athletes',
-#     user="postgres",
-#     password="123"
-# )
-
-# # Create a cursor object
-# cursor = conn.cursor()
 
 # Create sequences and tables
 def data_loader(dbName:str = None):
@@ -134,7 +123,6 @@ def data_loader(dbName:str = None):
         """
 
     # Execute the queries
-    # with Session(engine) as session:
         if not sequence_exists:
             session.execute(create_sequences_query)
         if not regions_table_exists:
@@ -147,16 +135,4 @@ def data_loader(dbName:str = None):
             session.execute(create_athletes_winter_table_query)
             session.execute(copy_athletes_winter_query)
         session.commit()
-    # Commit the changes
-    # conn.commit()
-
-
-    # Execute the copy queries
-    # with Session(engine) as session:
-    #     session.commit()
-
-# Commit the changes
-
-# Close the cursor and connection
-# session.close()
-# engine.close()
+        session.close()

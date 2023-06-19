@@ -1,3 +1,7 @@
+"""
+Pytest functions
+"""
+
 import pytest
 import requests
 from fastapi.testclient import TestClient
@@ -38,6 +42,12 @@ def client_fixture():
 
 
 def test_add_region(client: TestClient):
+    """
+     Test adding a region to an existing region.
+     
+     Args:
+     	 client: The client to use for the test ( Required)
+    """
     response = client.post(
         "/add_region/",
         json={"noc": "NO2", "region": "Test Region 2", "notes": "Test Notes 2"},
@@ -51,7 +61,13 @@ def test_add_region(client: TestClient):
 
 # ideally have Region limited to 3 char with custom class
 def test_add_region_invalid(client: TestClient):
-    # noc None. Another test needed for 3 length
+    """
+     Test adding a region that is invalid. Should return 422.
+     
+     Args:
+     	 client: The client to use for the test ( Required)
+    """
+  # noc None. Another test needed for 3 length
     response = client.post(
         "/add_region/",
         json={
@@ -62,6 +78,13 @@ def test_add_region_invalid(client: TestClient):
 
 
 def test_update_region(session: Session, client: TestClient):
+    """
+     Test updating a region. 
+     
+     Args:
+     	 session: The session to use for the test ( Required)
+     	 client: The client to use for the test ( Required)
+    """
     region = Region(noc="NO2", region="Test Region 2", notes="Test Notes 2")
     session.add(region)
     response = client.patch(
@@ -76,6 +99,13 @@ def test_update_region(session: Session, client: TestClient):
 
 
 def test_update_region_invalid(session: Session, client: TestClient):
+    """
+     Test update_region with invalid noc. Expect 422.
+     
+     Args:
+     	 session: The session to use for the test ( Required)
+     	 client: The client to use for the test ( Required)
+    """
     # noc None. Another test needed for 3 length
     region = Region(noc="NO2", region="Test Region 2", notes="Test Notes 2")
     session.add(region)
@@ -87,6 +117,13 @@ def test_update_region_invalid(session: Session, client: TestClient):
 
 
 def test_update_region_incorrect(session: Session, client: TestClient):
+    """
+     Test that an incorrect noc will return 404.
+     
+     Args:
+     	 session: The session to use for the test ( Required)
+     	 client: The client to use for the test ( Required)
+    """
     # noc incorrect.
     region = Region(noc="NO2", region="Test Region 2", notes="Test Notes 2")
     session.add(region)
@@ -98,6 +135,13 @@ def test_update_region_incorrect(session: Session, client: TestClient):
 
 
 def test_delete_region(session: Session, client: TestClient):
+    """
+     Test deleting a region.
+     
+     Args:
+     	 session: The session to use for the test ( Required)
+     	 client: The client to use for the test ( Required)
+    """
     region = Region(noc="NO2", region="Test Region 2", notes="Test Notes 2")
     session.add(region)
     response = client.delete(f"/delete_region/{region.noc}")
@@ -107,6 +151,13 @@ def test_delete_region(session: Session, client: TestClient):
 
 
 def test_delete_region_incorrect(session: Session, client: TestClient):
+    """
+     Test that a DELETE request with incorrect noc fails.
+     
+     Args:
+     	 session: The session to use for the test ( Required)
+     	 client: The client to use for the test ( Required)
+    """
     # noc incorrect
     region = Region(noc="NO2", region="Test Region 2", notes="Test Notes 2")
     session.add(region)
@@ -115,6 +166,12 @@ def test_delete_region_incorrect(session: Session, client: TestClient):
 
 
 def test_add_athlete(client: TestClient):
+    """
+     Test adding a athlete to the database
+     
+     Args:
+     	 client: The client to use for the test ( Required)
+    """
     athlete = AthleteBase(
         name="Test Name",
         sex="M",
@@ -167,12 +224,24 @@ def test_add_athlete(client: TestClient):
 
 
 def test_add_athlete_incomplete(client: TestClient):
+    """
+     Test adding an Athlete with incomplete data. 
+     
+     Args:
+     	 client: The client to use
+    """
     # Only one field
     response = client.post("/add_athlete/", json={"name": "Test Name"})
     assert response.status_code == 422
 
 
 def test_add_athlete_invalid(client: TestClient):
+    """
+     Test adding an invalid ahlete.
+     
+     Args:
+      session: The session to use for the test ( Required)
+    """
     # season invalid type.
     response = client.post(
         "/add_athlete/",
@@ -232,6 +301,13 @@ def test_add_athlete_invalid(client: TestClient):
 
 
 def test_update_athlete_invalid(session: Session, client: TestClient):
+    """
+     Test updating an invalid athlete.
+     
+     Args:
+      session: The session to use for the test ( Required)
+      client: The client to use for the test ( Required)
+    """
     athlete = AthleteBase(
         name="Test Name",
         sex="M",
@@ -263,11 +339,25 @@ def test_update_athlete_invalid(session: Session, client: TestClient):
 
 
 def test_update_athlete_incorrect(client: TestClient):
+    """
+     Update Athlete with incorrect name. This should fail with 404.
+     
+     Args:
+      session: The session to use for the test ( Required)
+      client: The client to use for the test ( Required)
+    """
     response = client.patch("/update_athlete/-10", json={"name": "Test Name Update"})
     assert response.status_code == 404
 
 
 def test_delete_athlete(session: Session, client: TestClient):
+    """
+     Test deleting an athlete.
+     
+     Args:
+      session: The session to use for the test ( Required)
+      client: The client to use for the test ( Required)
+    """
     athlete = AthleteBase(
         name="Test Name",
         sex="M",
@@ -300,6 +390,13 @@ def test_delete_athlete(session: Session, client: TestClient):
 
 
 def test_delete_athlete_incorrect(client: TestClient):
+    """
+     Test that an incorrect Athlete can't be deleted. Incorrect Athlete is a non - existent resource and should result in a 404
+     
+     Args:
+      session: The session to use for the test ( Required)
+      client: The client to use for the test ( Required)
+    """
     response = client.delete("/delete_athlete/-10")
     assert response.status_code == 404
 
@@ -322,6 +419,9 @@ def test_delete_athlete_incorrect(client: TestClient):
 
 
 def test_get_country_data():
+    """
+     Test route
+    """
     response = requests.get(
         "http://localhost:8000/country/fin?sport=judo&detail=false&season=union&exact=false"
     )
@@ -356,6 +456,9 @@ def test_get_country_data():
 
 
 def test_get_noc_data():
+    """
+    Test route
+    """
     response = requests.get(
         "http://127.0.0.1:8000/noc/NFL?start_date=1900&end_date=1910&detail=false&season=union"
     )
@@ -372,6 +475,9 @@ def test_get_noc_data():
 
 
 def test_get_athlete_data():
+    """
+    Test route
+    """
     response = requests.get(
         "http://127.0.0.1:8000/athletes/Tester?exact=false&detail=false&season=union"
     )

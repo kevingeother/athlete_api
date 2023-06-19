@@ -1,3 +1,6 @@
 athlete_api/__pycache__/
+.pycache_cache/
+.vscode/
+
 tests/__pycache__/
 # data/

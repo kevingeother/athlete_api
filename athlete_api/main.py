@@ -1,3 +1,7 @@
+"""
+Main entry function for API
+"""
+
 import os
 from collections import defaultdict
 from itertools import groupby
@@ -12,29 +16,15 @@ from .services import connect
 from .utils import add_where, verify_params
 from .data_loader import data_loader
 
-# database_url = "postgresql://postgres:123@db:5432/athletes"
-# engine = create_engine(database_url)
 engine = connect(filename=os.getenv('FILE_NAME'), section=os.getenv('SECTION_NAME'), echo=True)
 data_loader()
+
 #debug
-table_names = inspect(engine)
-print(table_names.get_table_names())
+# table_names = inspect(engine)
+# print(table_names.get_table_names())
 
 #We create an instance of FastAPI
 app = FastAPI()
-
-# We define authorizations for middleware components
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# today = datetime.date.today()
-# year = today.year
-
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
@@ -47,11 +37,6 @@ def get_session():
 def on_startup():
     create_db_and_tables()
 
-# @app.on_event("shutdown")
-# async def shutdown():
-#     await database.disconnect()
-
-
 @app.get("/")
 async def read_root():
     return {"start":"API to query athletes/countries in Olympics"}
@@ -63,13 +48,27 @@ async def read_root():
 # error documentation 400
 @app.get("/country/{country}", response_model= dict)
 def get_country_data(country: str,
+
                  sport: str = None,
                  start_date: int = None,
                  end_date: int = None,
                  detail: bool = False,
                  season: Seasons = Seasons.UNION,
                  exact: bool = True):
-    # local = locals()
+    """
+    Get data for a country. 
+    
+    Args:
+        country: The country to query e. g.'Finland '
+        sport: The sport to query e. g.'Swimming'
+        start_date: The start year of the date range to query
+        end_date: The end year of the date range to query
+        detail: If True return detailed data about the query
+        season: Seasons to use when searching for data
+        exact: If True return exact matches of country names instead of partial matches
+    Returns: 
+      A dict with keys'country'
+    """
     try:
         verify = verify_params(country, sport, start_date, end_date)
         assert verify is True
@@ -104,11 +103,14 @@ def get_country_data(country: str,
             statement = union(statement_1, statement_2)
 
         athletes = session.exec(statement).fetchall()
+        
         #adding secondary key to ensure ordering for next step groupby
         sorted_athletes = sorted(athletes, 
                                  key=lambda x: (x.region.lower().find(country), x.region, x.year))
         grouped_data = groupby(sorted_athletes, key=lambda x: x.region)
         result = defaultdict(lambda: defaultdict())
+
+        # Returns a dictionary of group data for each group in grouped_data.
         for country_name, group in grouped_data:
             group = list(group)
             result[country_name]['total_entries'] = len(group)
@@ -136,6 +138,20 @@ def get_noc_data(noc: str,
                  end_date: int = None,
                  detail: bool = False,
                  season: Seasons = Seasons.UNION):
+    """
+    Get Athlete data for a given NoC.
+    
+    Args:
+        noc: Name of the NoC to query. Must be a valid NOC name e.g. 'FIN'
+        sport: Name of the sport to query.
+        start_date: The start year of the date range to query
+        end_date: The end year of the date range to query
+        detail: If True return detailed data about the data in the form of a dict.
+        season: Seasons to filter by. Defaults to union.
+
+    Returns: 
+        A dict with keys'noc'
+    """
     try:
         verify = verify_params(noc, sport, start_date, end_date)
         assert verify is True
@@ -171,6 +187,8 @@ def get_noc_data(noc: str,
 
         grouped_data = groupby(sorted_athletes, key=lambda x: x.year)
         result = defaultdict(lambda: defaultdict())
+        
+        # Returns a dictionary of data grouped by year.
         for year, group in grouped_data:
             group = list(group)
             result[year]['season'] = {g.season for g in group}
@@ -195,19 +213,30 @@ def get_noc_data(noc: str,
 # add_medal : done
 @app.get("/athletes/{athlete_name}", response_model=dict)
 def get_athlete_data(athlete_name: str,
+
                     #  medal_winner:bool = False, 
                      exact: bool = False,
                      detail: bool = False,
                      season: Seasons = Seasons.UNION,
                     #  sort:str = 'name'
                     ):
-    # local = locals()
+    """
+    Get data for a specific athlete. 
+    
+    Args:
+      athlete_name: The name of the athlete
+      exact: If True the name must contain exactly the letters in the name
+      detail: If True returns entries of the athlete in several games
+      season
+
+    Returns: 
+      A dict with key 'athlete_name'
+  """
     with Session(engine) as session:
         statement_1 = select(AthleteSummer)
         statement_1 = add_where(statement=statement_1,
                                 clauses=[
                                     ('name', athlete_name, 'equal' if exact else 'contain'),
-                                    # ('medal', medal_winner, 'non_null' if medal_winner else None)
                                     ])
         statement_2 = select(AthleteWinter)
         statement_2 = add_where(statement=statement_2,
@@ -242,6 +271,15 @@ def get_athlete_data(athlete_name: str,
 #return types
 @app.post("/add_athlete/")
 def add_athlete(*, session: Session = Depends(get_session), athlete: AthleteBase):
+    """
+     Add athlete to database. 
+     
+     Args:
+     	 athlete: athlete model
+     
+     Returns: 
+     	 Athlete
+    """
     season = athlete.season.lower()
     match(season):
         case Seasons.SUMMER:
@@ -265,6 +303,17 @@ def add_athlete(*, session: Session = Depends(get_session), athlete: AthleteBase
 # better error handling psycopg2 https://kb.objectrocket.com/postgresql/python-error-handling-with-the-psycopg2-postgresql-adapter-645
 @app.patch("/update_athlete/{athlete_id}")
 def update_athlete(*, session: Session = Depends(get_session), athlete_id: int, athlete_update: AthleteUpdate):
+    """
+     Update athlete
+     
+     Args:
+      athlete_id: value of athlete id to update
+      athlete_update: AthleteUpdate model
+  
+     
+     Returns: 
+     	 Athlete
+    """
     db_athlete = session.get(AthleteSummer, athlete_id)
     if not db_athlete:
         db_athlete = session.get(AthleteWinter, athlete_id)
@@ -283,6 +332,15 @@ def update_athlete(*, session: Session = Depends(get_session), athlete_id: int, 
 
 @app.delete("/delete_athlete/{athlete_id}")
 def delete_athlete(*, session: Session = Depends(get_session), athlete_id: int):
+    """
+     Delete athlete
+     
+     Args:
+      athlete_id: value of athlete id to delete
+     
+     Returns: 
+     	 {"Deleted": True}
+    """
     db_athlete = session.get(AthleteSummer, athlete_id)
     if not db_athlete:
         db_athlete = session.get(AthleteWinter, athlete_id)
@@ -297,6 +355,15 @@ def delete_athlete(*, session: Session = Depends(get_session), athlete_id: int):
 #return types
 @app.post("/add_region/", response_model=Region)
 def add_region(*, session: Session = Depends(get_session), region: RegionBase):
+    """
+     Add region
+     
+     Args:
+     	 region: RegionBase model
+     
+     Returns: 
+     	 Region
+    """
     db_region = Region.from_orm(region)
     try:
         session.add(db_region)
@@ -309,6 +376,16 @@ def add_region(*, session: Session = Depends(get_session), region: RegionBase):
 
 @app.patch("/update_region/{noc}", response_model=Region)
 def update_region(*, session: Session = Depends(get_session), noc: str, region_update:RegionUpdate):
+    """
+     Update region
+     
+     Args:
+      noc: value of noc to update
+      region_update: RegionUpdate model
+     
+     Returns: 
+     	 Region
+    """
     db_region = session.get(Region, noc)
     if not db_region:
         raise HTTPException(status_code=404, detail="Region not found")
@@ -324,6 +401,15 @@ def update_region(*, session: Session = Depends(get_session), noc: str, region_u
 
 @app.delete("/delete_region/{noc}")
 def delete_region(*, session: Session = Depends(get_session), noc: str):
+    """
+     Delete region
+     
+     Args:
+     	 noc: value of noc to delete
+     
+     Returns: 
+     	 {"Deleted": True}
+    """ 
     db_region = session.get(Region, noc)
     if not db_region:
         raise HTTPException(status_code=404, detail="Region not found")
